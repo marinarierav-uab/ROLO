@@ -24,11 +24,11 @@ Description:
 '''
 
 # Imports
-import ROLO_utils as utils
+import utils.ROLO_utils as utils
 
 import tensorflow as tf
-from tensorflow.models.rnn import rnn, rnn_cell
-import cv2
+#from tensorflow.models.rnn import rnn, rnn_cell
+#import cv2
 
 import numpy as np
 import os.path
@@ -92,13 +92,21 @@ class ROLO_TF:
 
 
     def LSTM_single(self, name,  _X, _istate, _weights, _biases):
-        with tf.device('/gpu:0'):
+        """
+        with tf.device('/gpu:0'):  # gpu raises error :(
             # input shape: (batch_size, n_steps, n_input)
             _X = tf.transpose(_X, [1, 0, 2])  # permute num_steps and batch_size
             # Reshape to prepare input to hidden activation
             _X = tf.reshape(_X, [self.num_steps * self.batch_size, self.num_input]) # (num_steps*batch_size, num_input)
             # Split data because rnn cell needs a list of inputs for the RNN inner loop
             _X = tf.split(0, self.num_steps, _X) # n_steps * (batch_size, num_input)
+        """
+        # input shape: (batch_size, n_steps, n_input)
+        _X = tf.transpose(_X, [1, 0, 2])  # permute num_steps and batch_size
+        # Reshape to prepare input to hidden activation
+        _X = tf.reshape(_X, [self.num_steps * self.batch_size, self.num_input])  # (num_steps*batch_size, num_input)
+        # Split data because rnn cell needs a list of inputs for the RNN inner loop
+        _X = tf.split(0, self.num_steps, _X)  # n_steps * (batch_size, num_input)
 
         cell = tf.nn.rnn_cell.LSTMCell(self.num_input, self.num_input)
         state = _istate
@@ -111,14 +119,14 @@ class ROLO_TF:
     # Experiment with dropout
     def dropout_features(self, feature, prob):
         num_drop = int(prob * 4096)
-        drop_index = random.sample(xrange(4096), num_drop)
+        drop_index = random.sample(range(4096), num_drop)
         for i in range(len(drop_index)):
             index = drop_index[i]
             feature[index] = 0
         return feature
     '''---------------------------------------------------------------------------------------'''
     def build_networks(self):
-        if self.disp_console : print "Building ROLO graph..."
+        if self.disp_console : print("Building ROLO graph...")
         # Build rolo layers
         self.lstm_module = self.LSTM_single('lstm_test', self.x, self.istate, self.weights, self.biases)
         self.ious= tf.Variable(tf.zeros([self.batch_size]), name="ious")
@@ -126,7 +134,7 @@ class ROLO_TF:
         self.sess.run(tf.initialize_all_variables())
         self.saver = tf.train.Saver()
         #self.saver.restore(self.sess, self.rolo_weights_file)
-        if self.disp_console : print "Loading complete!" + '\n'
+        if self.disp_console : print("Loading complete!" + '\n')
 
 
     def testing(self, x_path, y_path):
@@ -137,6 +145,7 @@ class ROLO_TF:
         self.pred_location = pred[0][:, 4097:4101]
         #print("pred_location: ", self.pred_location)
         #print("self.y: ", self.y)
+
         self.correct_prediction = tf.square(self.pred_location - self.y)
         #print("self.correct_prediction: ", self.correct_prediction)
         self.accuracy = tf.reduce_mean(self.correct_prediction) * 100
@@ -145,13 +154,14 @@ class ROLO_TF:
 
         # Initializing the variables
         init = tf.initialize_all_variables()
+
         # Launch the graph
         with tf.Session() as sess:
 
             if (self.restore_weights == True):
                 sess.run(init)
                 self.saver.restore(sess, self.rolo_weights_file)
-                print "Loading complete!" + '\n'
+                print("Loading complete!" + '\n')
             else:
                 sess.run(init)
 
@@ -201,9 +211,9 @@ class ROLO_TF:
 
             #print "Testing Finished!"
             avg_loss = total_loss/id
-            print "Avg loss: " + str(avg_loss)
-            print "Time Spent on Tracking: " + str(total_time)
-            print "fps: " + str(id/total_time)
+            print("Avg loss: " + str(avg_loss))
+            print("Time Spent on Tracking: " + str(total_time))
+            print("fps: " + str(id/total_time))
             #save_path = self.saver.save(sess, self.rolo_weights_file)
             #print("Model saved in file: %s" % save_path)
 
@@ -227,37 +237,27 @@ class ROLO_TF:
                 self.build_networks()
                 self.detect_from_file(utils.file_in_path)
             else:
-                print "Default: running ROLO test."
+                print("Default: running ROLO test.")
                 self.build_networks()
 
                 evaluate_st = 0
                 evaluate_ed = 29
 
+                #evaluate_st = 5
+                #evaluate_ed = 5
+
                 for test in range(evaluate_st, evaluate_ed + 1):
 
                     [self.w_img, self.h_img, sequence_name, dummy_1, self.testing_iters] = utils.choose_video_sequence(test)
 
-                    x_path = os.path.join('benchmark/DATA', sequence_name, 'yolo_out/')
-                    y_path = os.path.join('benchmark/DATA', sequence_name, 'groundtruth_rect.txt')
-                    self.output_path = os.path.join('benchmark/DATA', sequence_name, 'rolo_out_test/')
+                    x_path = os.path.join('DATA', sequence_name, 'yolo_out/')
+                    y_path = os.path.join('DATA', sequence_name, 'groundtruth_rect.txt')
+                    self.output_path = os.path.join('DATA', sequence_name, 'rolo_out_test/')
                     utils.createFolder(self.output_path)
 
-                    #self.rolo_weights_file = '/u03/Guanghan/dev/ROLO-dev/output/ROLO_model/model_nodrop_30_2.ckpt'  #no dropout
-                    #self.rolo_weights_file = '/u03/Guanghan/dev/ROLO-dev/output/ROLO_model/model_online.ckpt'
-                    #self.rolo_weights_file = '/u03/Guanghan/dev/ROLO-dev/output/MOLO/model_MOT.ckpt'
-                    #self.rolo_weights_file = '/u03/Guanghan/dev/ROLO-dev/output/MOLO/model_MOT_0.2.ckpt'
+                    self.rolo_weights_file = 'checkpoints/model_demo.ckpt'
 
-                    #self.rolo_weights_file= '/u03/Guanghan/dev/ROLO-dev/output/ROLO_model/model_step6_exp0.ckpt'
-                    #self.rolo_weights_file= '/u03/Guanghan/dev/ROLO-dev/output/ROLO_model/model_step3_exp1.ckpt'
-                    #self.rolo_weights_file= '/u03/Guanghan/dev/ROLO-dev/output/ROLO_model/model_step6_exp2.ckpt'
-
-                    #self.rolo_weights_file= '/u03/Guanghan/dev/ROLO-dev/output/ROLO_model/model_step3_exp2.ckpt'
-                    #self.rolo_weights_file= '/u03/Guanghan/dev/ROLO-dev/output/ROLO_model/model_step9_exp2.ckpt'
-                    #self.rolo_weights_file= '/u03/Guanghan/dev/ROLO-dev/output/ROLO_model/model_step1_exp2.ckpt'
-
-                    self.rolo_weights_file= '/u03/Guanghan/dev/ROLO-dev/output/ROLO_model/model_step3_exp1_old.ckpt'
-
-                    self.num_steps = 3  # number of frames as an input sequence
+                    #self.num_steps = 3  # number of frames as an input sequence
                     print("TESTING ROLO on video sequence: ", sequence_name)
                     self.testing(x_path, y_path)
 

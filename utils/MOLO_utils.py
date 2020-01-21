@@ -23,7 +23,7 @@ Description:
 '''
 import os, sys, time
 import numpy as np
-import ConfigParser
+import configparser
 #import tensorflow as tf
 import cv2
 #import ROLO_network as rolo
@@ -78,7 +78,7 @@ class ROLO_utils:
 
         # Network Parameters
         def loadCfg(self):
-                Config = ConfigParser.ConfigParser()
+                Config = configparser.ConfigParser()
                 Config.read(self.cfgPath)
                 Sections = Config.sections()
 
@@ -121,7 +121,7 @@ class ROLO_utils:
         def validate_file_format(self, file_in_path, allowed_format):
                 if not os.path.isfile(file_in_path) or os.path.splitext(file_in_path)[1][1:] not in allowed_format:
                         #print(os.path.splitext(file_in_path)[1][1:])
-                        print "Input file with correct format not found.\n"
+                        print("Input file with correct format not found.\n")
                         return False
                 else:
                         return True
@@ -160,19 +160,19 @@ class ROLO_utils:
 
         # Not Face user
         def file_to_img(self, filepath):
-            print 'Processing '+ filepath
+            print('Processing '+ filepath)
             img = cv2.imread(filepath)
             return img
 
 
         def file_to_video(self, filepath):
-            print 'processing '+ filepath
+            print('processing '+ filepath)
             try:
                     video = cv2.VideoCapture(filepath)
             except IOError:
-                    print 'cannot open video file: ' + filepath
+                    print('cannot open video file: ' + filepath)
             else:
-                    print 'unknown error reading video file'
+                    print('unknown error reading video file')
             return video
 
 

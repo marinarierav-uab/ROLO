@@ -24,7 +24,7 @@ Description:
 '''
 import os, sys, time
 import numpy as np
-import ConfigParser
+import configparser
 import cv2
 import pickle
 import tensorflow as tf
@@ -77,7 +77,7 @@ class ROLO_utils:
 
         # Network Parameters
         def loadCfg(self):
-                Config = ConfigParser.ConfigParser()
+                Config = configparser.ConfigParser()
                 Config.read(self.cfgPath)
                 Sections = Config.sections()
 
@@ -120,7 +120,7 @@ class ROLO_utils:
         def validate_file_format(self, file_in_path, allowed_format):
                 if not os.path.isfile(file_in_path) or os.path.splitext(file_in_path)[1][1:] not in allowed_format:
                         #print(os.path.splitext(file_in_path)[1][1:])
-                        print "Input file with correct format not found.\n"
+                        print("Input file with correct format not found.\n")
                         return False
                 else:
                         return True
@@ -133,7 +133,7 @@ class ROLO_utils:
                         if argvs[i] == '-train': self.flag_train= True
                         if argvs[i] == '-cfg':  self.cfgPath = argvs[i+1]
                         if argvs[i] == '-weights': self.file_weights = argvs[i+1]
-                        if argvs[i] == '-input':  self.file_in_path = argvs[i+1];  self.validate_file_format(file_in_path, allowed_format)
+                        if argvs[i] == '-input':  self.file_in_path = argvs[i+1];  #self.validate_file_format(file_in_path, allowed_format)
                         if argvs[i] == '-output': self.file_out_path = argvs[i+1]; self.flag_write = True
                         if argvs[i] == '-detect': self.flag_detect = True; self.flag_track= False;
                         if argvs[i] == '-track': self.flag_detect= True; self.flag_track = True;
@@ -159,19 +159,19 @@ class ROLO_utils:
 
         # Not Face user
         def file_to_img(self, filepath):
-            print 'Processing '+ filepath
+            print('Processing '+ filepath)
             img = cv2.imread(filepath)
             return img
 
 
         def file_to_video(self, filepath):
-            print 'processing '+ filepath
+            print('processing '+ filepath)
             try:
                     video = cv2.VideoCapture(filepath)
             except IOError:
-                    print 'cannot open video file: ' + filepath
+                    print('cannot open video file: ' + filepath)
             else:
-                    print 'unknown error reading video file'
+                    print('unknown error reading video file')
             return video
 
 
@@ -762,6 +762,24 @@ def load_yolo_output_test(fold, batch_size, num_steps, id):
 
 def choose_video_sequence(test):
     # For VOT-30:
+
+    if test == 'debug':
+        w_img, h_img = [352, 240]
+        sequence_name = 'Debug'
+        training_iters = 42
+        testing_iters = 127
+    elif test == 'dog':
+        w_img, h_img = [352, 240]
+        sequence_name = 'Dog'
+        training_iters = 42
+        testing_iters = 127
+
+
+    return [w_img, h_img, sequence_name, training_iters, testing_iters]
+
+
+def old_choose_video_sequence(test):
+
     if test == 0:
         w_img, h_img = [480, 640]
         sequence_name = 'Human2'

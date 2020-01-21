@@ -27,34 +27,43 @@ import cv2
 import os
 import numpy as np
 import sys
-import ROLO_utils as utils
+import utils.ROLO_utils as utils
 '''----------------------------------------main-----------------------------------------------------'''
 def main(argv):
+    #os.system("python utils/ROLO_utils.py")
+
     ''' PARAMETERS '''
-    num_steps= 6
-    test = 11
+    num_steps = 6
+    test = 5  # dog
 
     [wid, ht, sequence_name, dummy_1, dummy_2] = utils.choose_video_sequence(test)
 
-    img_fold_path = os.path.join('benchmark/DATA', sequence_name, 'img/')
-    gt_file_path= os.path.join('benchmark/DATA', sequence_name, 'groundtruth_rect.txt')
-    yolo_out_path= os.path.join('benchmark/DATA', sequence_name, 'yolo_out/')
-    rolo_out_path= os.path.join('benchmark/DATA', sequence_name, 'rolo_out_test/')
+    """
+    img_fold_path = os.path.join('DATA', sequence_name, 'img/')
+    gt_file_path = os.path.join('DATA', sequence_name, 'groundtruth_rect.txt')
+    yolo_out_path = os.path.join('DATA', sequence_name, 'yolo_out/')
+    rolo_out_path = os.path.join('DATA', sequence_name, 'rolo_out_test/')
+    """
+    img_fold_path = os.path.join('cvc-data', sequence_name, 'img/')
+    gt_file_path = os.path.join('cvc-data', sequence_name, 'groundtruth_rect.txt')
+    yolo_out_path = os.path.join('cvc-data', sequence_name, 'yolo_out/')
+    rolo_out_path = os.path.join('cvc-data', sequence_name, 'rolo_out_test/')
 
-    paths_imgs = utils.load_folder( img_fold_path)
-    paths_rolo= utils.load_folder( rolo_out_path)
-    lines = utils.load_dataset_gt( gt_file_path)
+    paths_imgs = utils.load_folder(img_fold_path)
+    paths_rolo = utils.load_folder(rolo_out_path)
+    lines = utils.load_dataset_gt(gt_file_path)
 
     # Define the codec and create VideoWriter object
-    fourcc= cv2.cv.CV_FOURCC(*'DIVX')
+    #fourcc = cv2.cv.CV_FOURCC(*'DIVX')
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
     video_name = sequence_name + '_test.avi'
     video_path = os.path.join('output/videos/', video_name)
     video = cv2.VideoWriter(video_path, fourcc, 20, (wid, ht))
 
-    total= 0
-    rolo_avgloss= 0
-    yolo_avgloss= 0
-    for i in range(len(paths_rolo)- num_steps):
+    total = 0
+    rolo_avgloss = 0
+    yolo_avgloss = 0
+    for i in range(len(paths_rolo) - num_steps):
         id= i + 1
         test_id= id + num_steps - 2  #* num_steps + 1
 
@@ -63,8 +72,8 @@ def main(argv):
 
         if(img is None): break
 
-        yolo_location= utils.find_yolo_location(yolo_out_path, test_id)
-        yolo_location= utils.locations_normal( wid, ht, yolo_location)
+        yolo_location = utils.find_yolo_location(yolo_out_path, test_id)
+        yolo_location = utils.locations_normal( wid, ht, yolo_location)
         print(yolo_location)
 
         rolo_location= utils.find_rolo_location( rolo_out_path, test_id)
@@ -72,12 +81,12 @@ def main(argv):
         print(rolo_location)
 
         gt_location = utils.find_gt_location( lines, test_id - 1)
-        #gt_location= locations_from_0_to_1(None, 480, 640, gt_location)
+        #gt_location = locations_from_0_to_1(None, 480, 640, gt_location)
         #gt_location = locations_normal(None, 480, 640, gt_location)
         print('gt: ' + str(test_id))
         print(gt_location)
 
-        frame = utils.debug_3_locations( img, gt_location, yolo_location, rolo_location)
+        frame = utils.debug_3_locations(img, gt_location, yolo_location, rolo_location)
         video.write(frame)
 
         utils.createFolder(os.path.join('output/frames/',sequence_name))
